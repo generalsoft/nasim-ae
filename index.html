@@ -228,26 +228,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    .debug-panel {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.85);
-      color: #0f0;
-      font-family: monospace;
-      font-size: 11px;
-      padding: 8px;
-      border-radius: 8px;
-      z-index: 1001;
-      max-height: 150px;
-      overflow-y: auto;
-      direction: ltr;
-      text-align: left;
-      pointer-events: none;
-      backdrop-filter: blur(4px);
-    }
-
     @media (max-width: 700px) {
       .library-header {
         flex-direction: column;
@@ -261,10 +241,6 @@
       .gallery {
         grid-template-columns: repeat(auto-fill, minmax(170px, 190px));
         gap: 1rem;
-      }
-      .debug-panel {
-        font-size: 9px;
-        max-height: 120px;
       }
     }
   </style>
@@ -306,11 +282,6 @@
   <div id="pdfPagesContainer" class="pdf-pages-container"></div>
 </div>
 
-<div class="debug-panel" id="debugPanel">
-  <strong>📋 ڈیبگ معلومات:</strong><br>
-  Ready - Click on any book cover
-</div>
-
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
@@ -331,59 +302,24 @@
   const twoPageBtn = document.getElementById('twoPageBtn');
   const mainZoomSlider = document.getElementById('zoomSlider');
   const mainZoomPercent = document.getElementById('zoomPercent');
-  const debugPanel = document.getElementById('debugPanel');
 
-  function debug(message, isError = false) {
-    console.log(message);
-    const timestamp = new Date().toLocaleTimeString();
-    const color = isError ? '#ff8888' : '#88ff88';
-    debugPanel.innerHTML += `<div style="color: ${color}; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; word-break: break-all;">[${timestamp}] ${escapeHtml(message)}</div>`;
-    debugPanel.scrollTop = debugPanel.scrollHeight;
-    // Keep last 20 messages
-    const lines = debugPanel.children;
-    if (lines.length > 25) {
-      for (let i = 1; i < lines.length - 20; i++) {
-        if (lines[i]) lines[i].remove();
-      }
-    }
-  }
-  
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  // IMPORTANT: Use the exact filenames as provided
   // Map titles to exact PDF filenames
   function getExactPdfFilename(title) {
-    // Exact filenames based on user's files
     const filenameMap = {
       "علم، ذبان، اور حق": "علم، ذبان، اور حق.pdf",
       "والدین کے نام خط بابت اردو ذبان": "والدین کے نام خط بابت اردو ذبان.pdf"
     };
     
-    // Check if we have an exact match in the map
     if (filenameMap[title]) {
       return filenameMap[title];
     }
     
-    // Fallback: just add .pdf to the title (preserving all Urdu characters)
     return title + ".pdf";
   }
 
-  // Get PDF path - always use pdfs/ folder with exact filename
   function getPdfPath(book) {
-    // First priority: Use the exact filename mapping
     const exactFilename = getExactPdfFilename(book.title);
-    const pdfPath = `pdfs/${exactFilename}`;
-    
-    // Also check if the book has a pdf field and use that as fallback
-    if (book.pdf && book.pdf.trim() !== '' && book.pdf !== exactFilename) {
-      debug(`⚠️ Note: Book has custom pdf field: ${book.pdf}, but using exact filename: ${exactFilename}`);
-    }
-    
-    return pdfPath;
+    return `pdfs/${exactFilename}`;
   }
 
   function generateCoverImage(title, pageCount, callback) {
@@ -457,28 +393,14 @@
 
   async function loadLibrary() {
     try {
-      debug('📚 Loading library.json...');
       galleryDiv.innerHTML = '<div style="text-align: center; padding: 3rem; color: #6b5a42;">⏳ کتابیں لوڈ ہو رہی ہیں...</div>';
       
       const response = await fetch('library.json?t=' + Date.now());
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Could not load library.json`);
+        throw new Error(`HTTP ${response.status}`);
       }
       
-      const rawText = await response.text();
-      debug(`📄 Raw JSON received (${rawText.length} chars)`);
-      
-      libraryData = JSON.parse(rawText);
-      debug(`✅ Loaded ${libraryData.length} books from JSON`);
-      
-      // Log each book's title and exact PDF filename
-      libraryData.forEach((book, idx) => {
-        const pdfFilename = getExactPdfFilename(book.title);
-        const pdfPath = `pdfs/${pdfFilename}`;
-        debug(`📖 Book ${idx + 1}: "${book.title}"`);
-        debug(`   → PDF file: ${pdfFilename}`);
-        debug(`   → Full path: ${pdfPath}`);
-      });
+      libraryData = await response.json();
       
       if (!libraryData || libraryData.length === 0) {
         galleryDiv.innerHTML = '<div class="error-message">⚠️ کوئی کتابیں نہیں ملیں۔ براہ کرم library.json چیک کریں۔</div>';
@@ -489,7 +411,6 @@
       
       for(let i = 0; i < libraryData.length; i++) {
         const book = libraryData[i];
-        const pdfPath = getPdfPath(book);
         
         const coverSrc = await new Promise((resolve) => {
           generateCoverImage(book.title, book.pages || '?', resolve);
@@ -512,9 +433,6 @@
         pagesSpan.className = 'cover-pages';
         pagesSpan.innerText = `${book.pages} صفحات`;
         
-        // Store the PDF path on the card for debugging
-        card.title = `PDF: ${pdfPath}`;
-        
         card.appendChild(img);
         card.appendChild(titleSpan);
         card.appendChild(pagesSpan);
@@ -526,18 +444,11 @@
         galleryDiv.appendChild(card);
       }
       
-      debug('✨ Library loaded successfully! Click any book to read.');
-      
     } catch(error) {
       console.error('Error loading library:', error);
-      debug(`❌ Error: ${error.message}`, true);
       galleryDiv.innerHTML = `<div class="error-message">
         ❌ کتابیات لوڈ کرنے میں خرابی: ${error.message}<br><br>
-        <strong>حل:</strong><br>
-        1. یقینی بنائیں کہ library.json فائل موجود ہے<br>
-        2. JSON کا فارمیٹ درست ہو ( commas, brackets )<br>
-        3. UTF-8 encoding استعمال کریں<br><br>
-        <small>Current path: ${window.location.pathname}</small>
+        یقینی بنائیں کہ library.json فائل موجود ہے اور اس کا فارمیٹ درست ہے۔
       </div>`;
     }
   }
@@ -547,7 +458,6 @@
     pagesContainer.innerHTML = '';
     
     const totalPages = currentPDFDoc.numPages;
-    debug(`📄 Rendering ${totalPages} pages, mode: ${currentPageMode}, scale: ${Math.round(currentScale * 100)}%`);
     
     if(currentPageMode === 'single') {
       pagesContainer.classList.remove('two-page-view');
@@ -601,7 +511,6 @@
         pagesContainer.appendChild(pairDiv);
       }
     }
-    debug('✅ Rendering complete');
   }
   
   async function renderPage(pdfDoc, pageNum, canvasElement, scale) {
@@ -631,36 +540,27 @@
   async function openPDFViewer(bookIndex) {
     const book = libraryData[bookIndex];
     if(!book || !book.title) {
-      debug("❌ No book title found", true);
       alert("کتاب کا عنوان درست نہیں ہے۔");
       return;
     }
     
-    // Get the exact PDF filename and path
     const exactFilename = getExactPdfFilename(book.title);
     const pdfPath = `pdfs/${exactFilename}`;
-    
-    debug(`📖 Opening: "${book.title}"`);
-    debug(`📁 Exact PDF filename: ${exactFilename}`);
-    debug(`🔗 Full PDF path: ${pdfPath}`);
     
     viewerModal.style.display = 'flex';
     pagesContainer.innerHTML = `<div style="color:white; padding:2rem; text-align:center;">
       ⏳ کتاب لوڈ ہو رہی ہے...<br><br>
-      <small style="font-size:12px; direction:ltr; display:block; background:#000; padding:8px; border-radius:5px;">${pdfPath}</small><br>
       <small style="font-size:12px;">براہ کرم انتظار کریں</small>
     </div>`;
     
     try {
       const loadingTask = pdfjsLib.getDocument(pdfPath);
       currentPDFDoc = await loadingTask.promise;
-      debug(`✅ Successfully loaded PDF: ${exactFilename} (${currentPDFDoc.numPages} pages)`);
       currentScale = 1.0;
       updateViewerZoomUI();
       await renderPDFPages();
     } catch(err) {
       console.error('PDF loading error:', err);
-      debug(`❌ Failed to load: ${pdfPath} - ${err.message}`, true);
       
       pagesContainer.innerHTML = `<div style="color:#ffaaaa; padding:2rem; text-align:center; direction: rtl;">
         <h3>❌ PDF لوڈ نہیں ہو سکی</h3>
@@ -675,10 +575,7 @@
           <li>یقینی بنائیں کہ <strong>pdfs</strong> فولڈر موجود ہے</li>
           <li>PDF فائل کا نام بالکل یہ ہونا چاہیے: <strong style="color:#d4af37; font-size:14px;">${exactFilename}</strong></li>
           <li>فائل اپ لوڈ کرتے وقت نام کو تبدیل نہ کریں</li>
-          <li>چیک کریں: <code>pdfs/${exactFilename}</code></li>
         </ul>
-        <br>
-        <p>موجودہ مقام: <code>${window.location.pathname}</code></p>
         <button onclick="document.getElementById('closePdfBtn').click()" style="margin-top:20px; padding:8px 20px; background:#d4af37; border:none; border-radius:8px; cursor:pointer;">بند کریں</button>
       </div>`;
     }
@@ -706,7 +603,6 @@
     if(currentPDFDoc) {
       currentPDFDoc = null;
     }
-    debug('Viewer closed');
   });
   
   zoomInBtn.addEventListener('click', () => setScale(currentScale + 0.15));
@@ -719,7 +615,6 @@
     twoPageBtn.classList.remove('active');
     pagesContainer.style.direction = '';
     if(currentPDFDoc) renderPDFPages();
-    debug('Switched to single page mode');
   });
   
   twoPageBtn.addEventListener('click', () => {
@@ -727,7 +622,6 @@
     twoPageBtn.classList.add('active');
     singlePageBtn.classList.remove('active');
     if(currentPDFDoc) renderPDFPages();
-    debug('Switched to two page (RTL) mode');
   });
   
   mainZoomSlider.addEventListener('input', (e) => {
@@ -757,11 +651,6 @@
     .pdf-pages-container::-webkit-scrollbar-track { background: #1a1a18; }
   `;
   document.head.appendChild(style);
-  
-  debug('🚀 Ready! PDFs will be loaded from pdfs/ folder with exact filenames');
-  debug(`📌 Expected PDF files:
-  - pdfs/علم، ذبان، اور حق.pdf
-  - pdfs/والدین کے نام خط بابت اردو ذبان.pdf`);
 </script>
 </body>
 </html>
