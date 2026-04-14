@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Nasim.ae - Urdu PDF Library | RTL Reading</title>
-  <!-- Google Fonts for Urdu support (Noto Nastaliq Urdu) -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- PDF.js from Mozilla CDN for high-quality rendering -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     * {
@@ -21,24 +19,6 @@
       direction: rtl;
     }
 
-    /* Loading overlay */
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.5rem;
-      backdrop-filter: blur(4px);
-    }
-
-    /* Header and zoom slider */
     .library-header {
       background: #2c3e2f;
       color: #f7f3e8;
@@ -92,10 +72,9 @@
       font-size: 0.9rem;
     }
 
-    /* Cover gallery grid */
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 240px));
+      grid-template-columns: repeat(auto-fill, minmax(220px, 260px));
       gap: 2rem;
       justify-content: center;
       padding: 2.5rem 2rem;
@@ -133,6 +112,7 @@
       font-size: 1rem;
       color: #2c3e2f;
       background: #fffaf0;
+      word-break: break-word;
     }
 
     .cover-pages {
@@ -150,7 +130,6 @@
       margin: 2rem;
     }
 
-    /* PDF Viewer Modal */
     .pdf-viewer-overlay {
       position: fixed;
       top: 0;
@@ -249,6 +228,26 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
+    .debug-panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.85);
+      color: #0f0;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 8px;
+      border-radius: 8px;
+      z-index: 1001;
+      max-height: 150px;
+      overflow-y: auto;
+      direction: ltr;
+      text-align: left;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
     @media (max-width: 700px) {
       .library-header {
         flex-direction: column;
@@ -260,8 +259,12 @@
         flex-wrap: wrap;
       }
       .gallery {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 180px));
+        grid-template-columns: repeat(auto-fill, minmax(170px, 190px));
         gap: 1rem;
+      }
+      .debug-panel {
+        font-size: 9px;
+        max-height: 120px;
       }
     }
   </style>
@@ -281,7 +284,6 @@
   <div style="text-align: center; padding: 3rem; color: #6b5a42;">📚 کتابیں لوڈ ہو رہی ہیں...</div>
 </div>
 
-<!-- PDF Viewer Modal -->
 <div id="pdfViewerModal" class="pdf-viewer-overlay" style="display: none;">
   <div class="viewer-toolbar">
     <div class="toolbar-group">
@@ -301,23 +303,22 @@
       <input type="range" id="viewerZoomSlider" min="0.5" max="2.5" step="0.02" value="1.0" class="zoom-slider-mini">
     </div>
   </div>
-  <div id="pdfPagesContainer" class="pdf-pages-container">
-    <!-- PDF pages rendered here -->
-  </div>
+  <div id="pdfPagesContainer" class="pdf-pages-container"></div>
+</div>
+
+<div class="debug-panel" id="debugPanel">
+  <strong>📋 ڈیبگ معلومات:</strong><br>
+  Ready - Click on any book cover
 </div>
 
 <script>
-  // Configure PDF.js worker
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-  // Global variables
   let currentPDFDoc = null;
   let currentScale = 1.0;
   let currentPageMode = 'single';
-  let currentPDFId = null;
-  let libraryData = []; // Store loaded books
+  let libraryData = [];
   
-  // DOM elements
   const galleryDiv = document.getElementById('coverGallery');
   const viewerModal = document.getElementById('pdfViewerModal');
   const pagesContainer = document.getElementById('pdfPagesContainer');
@@ -330,8 +331,61 @@
   const twoPageBtn = document.getElementById('twoPageBtn');
   const mainZoomSlider = document.getElementById('zoomSlider');
   const mainZoomPercent = document.getElementById('zoomPercent');
+  const debugPanel = document.getElementById('debugPanel');
 
-  // Helper: Generate beautiful cover image from title and page count
+  function debug(message, isError = false) {
+    console.log(message);
+    const timestamp = new Date().toLocaleTimeString();
+    const color = isError ? '#ff8888' : '#88ff88';
+    debugPanel.innerHTML += `<div style="color: ${color}; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; word-break: break-all;">[${timestamp}] ${escapeHtml(message)}</div>`;
+    debugPanel.scrollTop = debugPanel.scrollHeight;
+    // Keep last 20 messages
+    const lines = debugPanel.children;
+    if (lines.length > 25) {
+      for (let i = 1; i < lines.length - 20; i++) {
+        if (lines[i]) lines[i].remove();
+      }
+    }
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // IMPORTANT: Use the exact filenames as provided
+  // Map titles to exact PDF filenames
+  function getExactPdfFilename(title) {
+    // Exact filenames based on user's files
+    const filenameMap = {
+      "علم، ذبان، اور حق": "علم، ذبان، اور حق.pdf",
+      "والدین کے نام خط بابت اردو ذبان": "والدین کے نام خط بابت اردو ذبان.pdf"
+    };
+    
+    // Check if we have an exact match in the map
+    if (filenameMap[title]) {
+      return filenameMap[title];
+    }
+    
+    // Fallback: just add .pdf to the title (preserving all Urdu characters)
+    return title + ".pdf";
+  }
+
+  // Get PDF path - always use pdfs/ folder with exact filename
+  function getPdfPath(book) {
+    // First priority: Use the exact filename mapping
+    const exactFilename = getExactPdfFilename(book.title);
+    const pdfPath = `pdfs/${exactFilename}`;
+    
+    // Also check if the book has a pdf field and use that as fallback
+    if (book.pdf && book.pdf.trim() !== '' && book.pdf !== exactFilename) {
+      debug(`⚠️ Note: Book has custom pdf field: ${book.pdf}, but using exact filename: ${exactFilename}`);
+    }
+    
+    return pdfPath;
+  }
+
   function generateCoverImage(title, pageCount, callback) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -340,7 +394,6 @@
     canvas.width = width;
     canvas.height = height;
     
-    // Beautiful gradient background
     const grad = ctx.createLinearGradient(0, 0, width, height);
     grad.addColorStop(0, '#2e5a3a');
     grad.addColorStop(0.5, '#1f3b2c');
@@ -348,7 +401,6 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
     
-    // Decorative border with Islamic geometric pattern inspiration
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 6;
     ctx.strokeRect(15, 15, width - 30, height - 30);
@@ -356,7 +408,6 @@
     ctx.lineWidth = 2;
     ctx.strokeRect(20, 20, width - 40, height - 40);
     
-    // Ornamental circle
     ctx.fillStyle = '#d4af37';
     ctx.beginPath();
     ctx.arc(width/2, 95, 35, 0, Math.PI * 2);
@@ -370,9 +421,8 @@
     ctx.textAlign = 'center';
     ctx.fillText("📘", width/2, 108);
     
-    // Title text with wrapping
     ctx.fillStyle = '#f9eec1';
-    ctx.font = `bold 28px 'Noto Nastaliq Urdu'`;
+    ctx.font = `bold 26px 'Noto Nastaliq Urdu'`;
     const maxWidth = width - 70;
     let lines = [];
     let line = '';
@@ -391,10 +441,9 @@
     
     let startY = height/2 - 20;
     lines.forEach((l, idx) => {
-      ctx.fillText(l, width/2, startY + idx * 42);
+      ctx.fillText(l, width/2, startY + idx * 40);
     });
     
-    // Page count info
     ctx.font = `18px 'Noto Nastaliq Urdu'`;
     ctx.fillStyle = '#e6d5a8';
     ctx.fillText(`📄 ${pageCount} صفحات`, width/2, height - 100);
@@ -406,29 +455,42 @@
     callback(canvas.toDataURL());
   }
 
-  // Load JSON catalog and build gallery
   async function loadLibrary() {
     try {
+      debug('📚 Loading library.json...');
       galleryDiv.innerHTML = '<div style="text-align: center; padding: 3rem; color: #6b5a42;">⏳ کتابیں لوڈ ہو رہی ہیں...</div>';
       
-      // Fetch the library.json file
-      const response = await fetch('library.json');
+      const response = await fetch('library.json?t=' + Date.now());
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Could not load library.json`);
       }
-      libraryData = await response.json();
+      
+      const rawText = await response.text();
+      debug(`📄 Raw JSON received (${rawText.length} chars)`);
+      
+      libraryData = JSON.parse(rawText);
+      debug(`✅ Loaded ${libraryData.length} books from JSON`);
+      
+      // Log each book's title and exact PDF filename
+      libraryData.forEach((book, idx) => {
+        const pdfFilename = getExactPdfFilename(book.title);
+        const pdfPath = `pdfs/${pdfFilename}`;
+        debug(`📖 Book ${idx + 1}: "${book.title}"`);
+        debug(`   → PDF file: ${pdfFilename}`);
+        debug(`   → Full path: ${pdfPath}`);
+      });
       
       if (!libraryData || libraryData.length === 0) {
         galleryDiv.innerHTML = '<div class="error-message">⚠️ کوئی کتابیں نہیں ملیں۔ براہ کرم library.json چیک کریں۔</div>';
         return;
       }
       
-      // Build gallery from JSON data
       galleryDiv.innerHTML = '';
       
       for(let i = 0; i < libraryData.length; i++) {
         const book = libraryData[i];
-        // Generate cover image dynamically (since cover is empty in JSON)
+        const pdfPath = getPdfPath(book);
+        
         const coverSrc = await new Promise((resolve) => {
           generateCoverImage(book.title, book.pages || '?', resolve);
         });
@@ -450,6 +512,9 @@
         pagesSpan.className = 'cover-pages';
         pagesSpan.innerText = `${book.pages} صفحات`;
         
+        // Store the PDF path on the card for debugging
+        card.title = `PDF: ${pdfPath}`;
+        
         card.appendChild(img);
         card.appendChild(titleSpan);
         card.appendChild(pagesSpan);
@@ -461,25 +526,32 @@
         galleryDiv.appendChild(card);
       }
       
+      debug('✨ Library loaded successfully! Click any book to read.');
+      
     } catch(error) {
       console.error('Error loading library:', error);
+      debug(`❌ Error: ${error.message}`, true);
       galleryDiv.innerHTML = `<div class="error-message">
-        ❌ کتابیات لوڈ کرنے میں خرابی: ${error.message}<br>
-        یقینی بنائیں کہ library.json فائل موجود ہے اور اس کا فارمیٹ درست ہے۔
+        ❌ کتابیات لوڈ کرنے میں خرابی: ${error.message}<br><br>
+        <strong>حل:</strong><br>
+        1. یقینی بنائیں کہ library.json فائل موجود ہے<br>
+        2. JSON کا فارمیٹ درست ہو ( commas, brackets )<br>
+        3. UTF-8 encoding استعمال کریں<br><br>
+        <small>Current path: ${window.location.pathname}</small>
       </div>`;
     }
   }
   
-  // Render PDF pages
   async function renderPDFPages() {
     if(!currentPDFDoc) return;
     pagesContainer.innerHTML = '';
     
     const totalPages = currentPDFDoc.numPages;
+    debug(`📄 Rendering ${totalPages} pages, mode: ${currentPageMode}, scale: ${Math.round(currentScale * 100)}%`);
     
     if(currentPageMode === 'single') {
       pagesContainer.classList.remove('two-page-view');
-      pagesContainer.style.direction = ''; // reset for single view
+      pagesContainer.style.direction = '';
       for(let i = 1; i <= totalPages; i++) {
         const pageWrapper = document.createElement('div');
         pageWrapper.className = 'page-wrapper';
@@ -490,9 +562,9 @@
         await renderPage(currentPDFDoc, i, canvas, currentScale);
       }
     } 
-    else { // two-page view with RTL support for Urdu
+    else {
       pagesContainer.classList.add('two-page-view');
-      pagesContainer.style.direction = 'rtl'; // Right-to-left for Urdu reading
+      pagesContainer.style.direction = 'rtl';
       
       for(let i = 1; i <= totalPages; i += 2) {
         const pairDiv = document.createElement('div');
@@ -503,13 +575,11 @@
         pairDiv.style.alignItems = 'flex-start';
         pairDiv.style.margin = '0 12px';
         
-        // Right page (first in RTL flow)
         const rightWrapper = document.createElement('div');
         rightWrapper.className = 'page-wrapper';
         const rightCanvas = document.createElement('canvas');
         rightWrapper.appendChild(rightCanvas);
         
-        // Left page
         const leftWrapper = document.createElement('div');
         leftWrapper.className = 'page-wrapper';
         const leftCanvas = document.createElement('canvas');
@@ -531,6 +601,7 @@
         pagesContainer.appendChild(pairDiv);
       }
     }
+    debug('✅ Rendering complete');
   }
   
   async function renderPage(pdfDoc, pageNum, canvasElement, scale) {
@@ -559,34 +630,56 @@
   
   async function openPDFViewer(bookIndex) {
     const book = libraryData[bookIndex];
-    if(!book || !book.pdf) {
-      alert("PDF کا راستہ درست نہیں ہے۔");
+    if(!book || !book.title) {
+      debug("❌ No book title found", true);
+      alert("کتاب کا عنوان درست نہیں ہے۔");
       return;
     }
     
-    currentPDFId = bookIndex;
+    // Get the exact PDF filename and path
+    const exactFilename = getExactPdfFilename(book.title);
+    const pdfPath = `pdfs/${exactFilename}`;
+    
+    debug(`📖 Opening: "${book.title}"`);
+    debug(`📁 Exact PDF filename: ${exactFilename}`);
+    debug(`🔗 Full PDF path: ${pdfPath}`);
+    
     viewerModal.style.display = 'flex';
-    pagesContainer.innerHTML = '<div style="color:white; padding:2rem;">⏳ کتاب لوڈ ہو رہی ہے... براہ کرم انتظار کریں</div>';
+    pagesContainer.innerHTML = `<div style="color:white; padding:2rem; text-align:center;">
+      ⏳ کتاب لوڈ ہو رہی ہے...<br><br>
+      <small style="font-size:12px; direction:ltr; display:block; background:#000; padding:8px; border-radius:5px;">${pdfPath}</small><br>
+      <small style="font-size:12px;">براہ کرم انتظار کریں</small>
+    </div>`;
     
     try {
-      // Construct proper PDF URL (relative to the current page)
-      let pdfUrl = book.pdf;
-      // If URL doesn't start with http, ensure it's relative
-      if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
-        pdfUrl = pdfUrl;
-      }
-      
-      const loadingTask = pdfjsLib.getDocument(pdfUrl);
+      const loadingTask = pdfjsLib.getDocument(pdfPath);
       currentPDFDoc = await loadingTask.promise;
+      debug(`✅ Successfully loaded PDF: ${exactFilename} (${currentPDFDoc.numPages} pages)`);
       currentScale = 1.0;
       updateViewerZoomUI();
       await renderPDFPages();
     } catch(err) {
       console.error('PDF loading error:', err);
-      pagesContainer.innerHTML = `<div style="color:#ffaaaa; padding:2rem; text-align:center;">
-        ❌ PDF لوڈ کرنے میں خرابی: ${err.message}<br><br>
-        فائل راستہ: ${book.pdf}<br>
-        یقینی بنائیں کہ PDF فائل موجود ہے۔
+      debug(`❌ Failed to load: ${pdfPath} - ${err.message}`, true);
+      
+      pagesContainer.innerHTML = `<div style="color:#ffaaaa; padding:2rem; text-align:center; direction: rtl;">
+        <h3>❌ PDF لوڈ نہیں ہو سکی</h3>
+        <p><strong>کتاب:</strong> ${book.title}</p>
+        <p><strong>تلاش شدہ راستہ:</strong></p>
+        <code style="display:block; background:#000; padding:10px; margin:10px; border-radius:5px; direction:ltr; text-align:left; word-break:break-all;">${pdfPath}</code>
+        <p><strong>متوقع فائل کا نام:</strong></p>
+        <code style="display:block; background:#000; padding:10px; margin:10px; border-radius:5px; direction:ltr; text-align:left; font-size:14px;">${exactFilename}</code>
+        <br>
+        <p><strong>حل:</strong></p>
+        <ul style="text-align: right; margin-top: 10px; padding-right: 20px;">
+          <li>یقینی بنائیں کہ <strong>pdfs</strong> فولڈر موجود ہے</li>
+          <li>PDF فائل کا نام بالکل یہ ہونا چاہیے: <strong style="color:#d4af37; font-size:14px;">${exactFilename}</strong></li>
+          <li>فائل اپ لوڈ کرتے وقت نام کو تبدیل نہ کریں</li>
+          <li>چیک کریں: <code>pdfs/${exactFilename}</code></li>
+        </ul>
+        <br>
+        <p>موجودہ مقام: <code>${window.location.pathname}</code></p>
+        <button onclick="document.getElementById('closePdfBtn').click()" style="margin-top:20px; padding:8px 20px; background:#d4af37; border:none; border-radius:8px; cursor:pointer;">بند کریں</button>
       </div>`;
     }
   }
@@ -606,7 +699,6 @@
     }
   }
   
-  // Event listeners for viewer controls
   closeBtn.addEventListener('click', () => {
     viewerModal.style.display = 'none';
     pagesContainer.innerHTML = '';
@@ -614,6 +706,7 @@
     if(currentPDFDoc) {
       currentPDFDoc = null;
     }
+    debug('Viewer closed');
   });
   
   zoomInBtn.addEventListener('click', () => setScale(currentScale + 0.15));
@@ -626,6 +719,7 @@
     twoPageBtn.classList.remove('active');
     pagesContainer.style.direction = '';
     if(currentPDFDoc) renderPDFPages();
+    debug('Switched to single page mode');
   });
   
   twoPageBtn.addEventListener('click', () => {
@@ -633,29 +727,27 @@
     twoPageBtn.classList.add('active');
     singlePageBtn.classList.remove('active');
     if(currentPDFDoc) renderPDFPages();
+    debug('Switched to two page (RTL) mode');
   });
   
-  // Main zoom slider for cover gallery
   mainZoomSlider.addEventListener('input', (e) => {
     const val = parseFloat(e.target.value);
     mainZoomPercent.innerText = Math.round(val * 100) + '%';
     const gallery = document.querySelector('.gallery');
-    const baseMin = 200;
+    const baseMin = 220;
     const newMin = baseMin * val;
     gallery.style.setProperty('grid-template-columns', `repeat(auto-fill, minmax(${newMin}px, ${newMin * 1.2}px))`);
   });
   
-  // Close modal on escape key
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape' && viewerModal.style.display === 'flex') {
       closeBtn.click();
     }
   });
   
-  // Initialize: load library from JSON
+  // Initialize
   loadLibrary();
   
-  // Add custom scrollbar styling
   const style = document.createElement('style');
   style.textContent = `
     ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -666,7 +758,10 @@
   `;
   document.head.appendChild(style);
   
-  console.log("Urdu PDF Library loaded — Reading from library.json, RTL two-page view enabled");
+  debug('🚀 Ready! PDFs will be loaded from pdfs/ folder with exact filenames');
+  debug(`📌 Expected PDF files:
+  - pdfs/علم، ذبان، اور حق.pdf
+  - pdfs/والدین کے نام خط بابت اردو ذبان.pdf`);
 </script>
 </body>
 </html>
