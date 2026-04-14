@@ -1,28 +1,672 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Nasim Library</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Nasim.ae - Urdu PDF Library | RTL Reading</title>
+  <!-- Google Fonts for Urdu support (Noto Nastaliq Urdu) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- PDF.js from Mozilla CDN for high-quality rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  <!-- PageFlip -->
-  <script src="https://unpkg.com/page-flip/dist/js/page-flip.browser.js"></script>
-  <link rel="stylesheet" href="styles.css">
+    body {
+      background: #e9e5dc;
+      font-family: 'Noto Nastaliq Urdu', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      direction: rtl;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Header and zoom slider */
+    .library-header {
+      background: #2c3e2f;
+      color: #f7f3e8;
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .library-header h1 {
+      font-size: 1.6rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+
+    .library-header h1 small {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    .zoom-control {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #4a5b44;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+    }
+
+    .zoom-control label {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    #zoomSlider {
+      width: 180px;
+      cursor: pointer;
+      accent-color: #d4af37;
+    }
+
+    .zoom-value {
+      background: #1e2a1c;
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    /* Cover gallery grid */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 240px));
+      gap: 2rem;
+      justify-content: center;
+      padding: 2.5rem 2rem;
+      background: #fef7e8;
+      min-height: 60vh;
+    }
+
+    .cover-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s;
+      text-align: center;
+      direction: rtl;
+    }
+
+    .cover-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+    }
+
+    .cover-img {
+      width: 100%;
+      aspect-ratio: 1 / 1.4;
+      object-fit: cover;
+      background: linear-gradient(135deg, #3a5a40, #1f3b2c);
+      border-bottom: 3px solid #d4af37;
+    }
+
+    .cover-title {
+      padding: 0.8rem 0.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #2c3e2f;
+      background: #fffaf0;
+    }
+
+    .cover-pages {
+      font-size: 0.75rem;
+      color: #7a6e5a;
+      padding-bottom: 0.5rem;
+    }
+
+    .error-message {
+      text-align: center;
+      padding: 3rem;
+      color: #8b3a3a;
+      background: #ffe0e0;
+      border-radius: 20px;
+      margin: 2rem;
+    }
+
+    /* PDF Viewer Modal */
+    .pdf-viewer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      direction: ltr;
+      overflow: hidden;
+    }
+
+    .viewer-toolbar {
+      background: #1e2a1c;
+      color: white;
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 2px solid #d4af37;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: #2d3a28;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+    }
+
+    .toolbar-group button, .close-viewer {
+      background: #d4af37;
+      border: none;
+      color: #1e2a1c;
+      font-weight: bold;
+      padding: 6px 14px;
+      border-radius: 32px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+
+    .toolbar-group button:hover, .close-viewer:hover {
+      background: #f5cb5c;
+      transform: scale(1.02);
+    }
+
+    .page-mode-buttons button.active {
+      background: #ffffff;
+      color: #1e2a1c;
+      box-shadow: 0 0 0 2px #d4af37;
+    }
+
+    .zoom-slider-mini {
+      width: 140px;
+      cursor: pointer;
+    }
+
+    .pdf-pages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      background: #2b2b28;
+    }
+
+    .pdf-pages-container.two-page-view {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 28px;
+    }
+
+    .page-wrapper {
+      background: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      display: flex;
+      justify-content: center;
+      transition: all 0.1s;
+    }
+
+    canvas {
+      display: block;
+      width: auto;
+      height: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 700px) {
+      .library-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        text-align: center;
+      }
+      .toolbar-group {
+        flex-wrap: wrap;
+      }
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 180px));
+        gap: 1rem;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-  <h1>📚 Nasim Library</h1>
-
-  <div id="library"></div>
-
-  <!-- 📖 Viewer -->
-  <div id="viewerContainer">
-    <div class="closeBtn" onclick="closeBook()">✖ Close</div>
-    <div id="viewer"></div>
+<div class="library-header">
+  <h1>📖 کتابخانہ Nasim.ae <small>اردو کتابیں</small></h1>
+  <div class="zoom-control">
+    <label>🔍 زوم (Zoom):</label>
+    <input type="range" id="zoomSlider" min="0.6" max="2.2" step="0.02" value="1.0">
+    <span class="zoom-value" id="zoomPercent">100%</span>
   </div>
+</div>
 
-  <script src="script.js"></script>
+<div class="gallery" id="coverGallery">
+  <div style="text-align: center; padding: 3rem; color: #6b5a42;">📚 کتابیں لوڈ ہو رہی ہیں...</div>
+</div>
+
+<!-- PDF Viewer Modal -->
+<div id="pdfViewerModal" class="pdf-viewer-overlay" style="display: none;">
+  <div class="viewer-toolbar">
+    <div class="toolbar-group">
+      <button id="closePdfBtn" class="close-viewer">✖ بند کریں</button>
+      <button id="zoomInBtn">➕ زوم ان</button>
+      <button id="zoomOutBtn">➖ زوم آؤٹ</button>
+      <span style="margin:0 4px;">|</span>
+      <span>📄 مقیاس: </span>
+      <span id="viewerZoomPercent">100%</span>
+    </div>
+    <div class="toolbar-group page-mode-buttons">
+      <button id="singlePageBtn" class="active">📖 ایک صفحہ</button>
+      <button id="twoPageBtn">📖📖 دو صفحہ</button>
+    </div>
+    <div class="toolbar-group">
+      <span>🔍 سلائیڈر</span>
+      <input type="range" id="viewerZoomSlider" min="0.5" max="2.5" step="0.02" value="1.0" class="zoom-slider-mini">
+    </div>
+  </div>
+  <div id="pdfPagesContainer" class="pdf-pages-container">
+    <!-- PDF pages rendered here -->
+  </div>
+</div>
+
+<script>
+  // Configure PDF.js worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+  // Global variables
+  let currentPDFDoc = null;
+  let currentScale = 1.0;
+  let currentPageMode = 'single';
+  let currentPDFId = null;
+  let libraryData = []; // Store loaded books
+  
+  // DOM elements
+  const galleryDiv = document.getElementById('coverGallery');
+  const viewerModal = document.getElementById('pdfViewerModal');
+  const pagesContainer = document.getElementById('pdfPagesContainer');
+  const closeBtn = document.getElementById('closePdfBtn');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const viewerZoomSlider = document.getElementById('viewerZoomSlider');
+  const viewerZoomPercent = document.getElementById('viewerZoomPercent');
+  const singlePageBtn = document.getElementById('singlePageBtn');
+  const twoPageBtn = document.getElementById('twoPageBtn');
+  const mainZoomSlider = document.getElementById('zoomSlider');
+  const mainZoomPercent = document.getElementById('zoomPercent');
+
+  // Helper: Generate beautiful cover image from title and page count
+  function generateCoverImage(title, pageCount, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const width = 400;
+    const height = 560;
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Beautiful gradient background
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    grad.addColorStop(0, '#2e5a3a');
+    grad.addColorStop(0.5, '#1f3b2c');
+    grad.addColorStop(1, '#0f2819');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Decorative border with Islamic geometric pattern inspiration
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(15, 15, width - 30, height - 30);
+    ctx.strokeStyle = '#c9a03d';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, width - 40, height - 40);
+    
+    // Ornamental circle
+    ctx.fillStyle = '#d4af37';
+    ctx.beginPath();
+    ctx.arc(width/2, 95, 35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1f3b2c';
+    ctx.beginPath();
+    ctx.arc(width/2, 95, 28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#d4af37';
+    ctx.font = `38px 'Noto Nastaliq Urdu'`;
+    ctx.textAlign = 'center';
+    ctx.fillText("📘", width/2, 108);
+    
+    // Title text with wrapping
+    ctx.fillStyle = '#f9eec1';
+    ctx.font = `bold 28px 'Noto Nastaliq Urdu'`;
+    const maxWidth = width - 70;
+    let lines = [];
+    let line = '';
+    
+    for(let i = 0; i < title.length; i++) {
+      let testLine = line + title[i];
+      let metrics = ctx.measureText(testLine);
+      if(metrics.width > maxWidth && line.length > 0) {
+        lines.push(line);
+        line = title[i];
+      } else {
+        line = testLine;
+      }
+    }
+    lines.push(line);
+    
+    let startY = height/2 - 20;
+    lines.forEach((l, idx) => {
+      ctx.fillText(l, width/2, startY + idx * 42);
+    });
+    
+    // Page count info
+    ctx.font = `18px 'Noto Nastaliq Urdu'`;
+    ctx.fillStyle = '#e6d5a8';
+    ctx.fillText(`📄 ${pageCount} صفحات`, width/2, height - 100);
+    
+    ctx.font = `16px 'Noto Nastaliq Urdu'`;
+    ctx.fillStyle = '#c9b16a';
+    ctx.fillText("Nasim.ae", width/2, height - 45);
+    
+    callback(canvas.toDataURL());
+  }
+
+  // Load JSON catalog and build gallery
+  async function loadLibrary() {
+    try {
+      galleryDiv.innerHTML = '<div style="text-align: center; padding: 3rem; color: #6b5a42;">⏳ کتابیں لوڈ ہو رہی ہیں...</div>';
+      
+      // Fetch the library.json file
+      const response = await fetch('library.json');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Could not load library.json`);
+      }
+      libraryData = await response.json();
+      
+      if (!libraryData || libraryData.length === 0) {
+        galleryDiv.innerHTML = '<div class="error-message">⚠️ کوئی کتابیں نہیں ملیں۔ براہ کرم library.json چیک کریں۔</div>';
+        return;
+      }
+      
+      // Build gallery from JSON data
+      galleryDiv.innerHTML = '';
+      
+      for(let i = 0; i < libraryData.length; i++) {
+        const book = libraryData[i];
+        // Generate cover image dynamically (since cover is empty in JSON)
+        const coverSrc = await new Promise((resolve) => {
+          generateCoverImage(book.title, book.pages || '?', resolve);
+        });
+        
+        const card = document.createElement('div');
+        card.className = 'cover-card';
+        card.setAttribute('data-book-index', i);
+        
+        const img = document.createElement('img');
+        img.src = coverSrc;
+        img.alt = book.title;
+        img.className = 'cover-img';
+        
+        const titleSpan = document.createElement('div');
+        titleSpan.className = 'cover-title';
+        titleSpan.innerText = book.title;
+        
+        const pagesSpan = document.createElement('div');
+        pagesSpan.className = 'cover-pages';
+        pagesSpan.innerText = `${book.pages} صفحات`;
+        
+        card.appendChild(img);
+        card.appendChild(titleSpan);
+        card.appendChild(pagesSpan);
+        
+        card.addEventListener('click', () => {
+          openPDFViewer(i);
+        });
+        
+        galleryDiv.appendChild(card);
+      }
+      
+    } catch(error) {
+      console.error('Error loading library:', error);
+      galleryDiv.innerHTML = `<div class="error-message">
+        ❌ کتابیات لوڈ کرنے میں خرابی: ${error.message}<br>
+        یقینی بنائیں کہ library.json فائل موجود ہے اور اس کا فارمیٹ درست ہے۔
+      </div>`;
+    }
+  }
+  
+  // Render PDF pages
+  async function renderPDFPages() {
+    if(!currentPDFDoc) return;
+    pagesContainer.innerHTML = '';
+    
+    const totalPages = currentPDFDoc.numPages;
+    
+    if(currentPageMode === 'single') {
+      pagesContainer.classList.remove('two-page-view');
+      pagesContainer.style.direction = ''; // reset for single view
+      for(let i = 1; i <= totalPages; i++) {
+        const pageWrapper = document.createElement('div');
+        pageWrapper.className = 'page-wrapper';
+        pageWrapper.style.margin = '0 auto';
+        const canvas = document.createElement('canvas');
+        pageWrapper.appendChild(canvas);
+        pagesContainer.appendChild(pageWrapper);
+        await renderPage(currentPDFDoc, i, canvas, currentScale);
+      }
+    } 
+    else { // two-page view with RTL support for Urdu
+      pagesContainer.classList.add('two-page-view');
+      pagesContainer.style.direction = 'rtl'; // Right-to-left for Urdu reading
+      
+      for(let i = 1; i <= totalPages; i += 2) {
+        const pairDiv = document.createElement('div');
+        pairDiv.style.display = 'flex';
+        pairDiv.style.flexDirection = 'row';
+        pairDiv.style.gap = '24px';
+        pairDiv.style.justifyContent = 'center';
+        pairDiv.style.alignItems = 'flex-start';
+        pairDiv.style.margin = '0 12px';
+        
+        // Right page (first in RTL flow)
+        const rightWrapper = document.createElement('div');
+        rightWrapper.className = 'page-wrapper';
+        const rightCanvas = document.createElement('canvas');
+        rightWrapper.appendChild(rightCanvas);
+        
+        // Left page
+        const leftWrapper = document.createElement('div');
+        leftWrapper.className = 'page-wrapper';
+        const leftCanvas = document.createElement('canvas');
+        leftWrapper.appendChild(leftCanvas);
+        
+        if(i <= totalPages) {
+          await renderPage(currentPDFDoc, i, rightCanvas, currentScale);
+        } else {
+          rightWrapper.style.opacity = '0.3';
+        }
+        if(i+1 <= totalPages) {
+          await renderPage(currentPDFDoc, i+1, leftCanvas, currentScale);
+        } else {
+          leftWrapper.style.opacity = '0.3';
+        }
+        
+        pairDiv.appendChild(rightWrapper);
+        pairDiv.appendChild(leftWrapper);
+        pagesContainer.appendChild(pairDiv);
+      }
+    }
+  }
+  
+  async function renderPage(pdfDoc, pageNum, canvasElement, scale) {
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: scale });
+      const context = canvasElement.getContext('2d');
+      canvasElement.width = viewport.width;
+      canvasElement.height = viewport.height;
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+        background: 'white'
+      };
+      await page.render(renderContext).promise;
+    } catch(err) {
+      console.warn(`Page ${pageNum} render error:`, err);
+      const ctx = canvasElement.getContext('2d');
+      ctx.fillStyle = '#f5f0e0';
+      ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+      ctx.fillStyle = '#8b3a3a';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Page could not be rendered', 20, 50);
+    }
+  }
+  
+  async function openPDFViewer(bookIndex) {
+    const book = libraryData[bookIndex];
+    if(!book || !book.pdf) {
+      alert("PDF کا راستہ درست نہیں ہے۔");
+      return;
+    }
+    
+    currentPDFId = bookIndex;
+    viewerModal.style.display = 'flex';
+    pagesContainer.innerHTML = '<div style="color:white; padding:2rem;">⏳ کتاب لوڈ ہو رہی ہے... براہ کرم انتظار کریں</div>';
+    
+    try {
+      // Construct proper PDF URL (relative to the current page)
+      let pdfUrl = book.pdf;
+      // If URL doesn't start with http, ensure it's relative
+      if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+        pdfUrl = pdfUrl;
+      }
+      
+      const loadingTask = pdfjsLib.getDocument(pdfUrl);
+      currentPDFDoc = await loadingTask.promise;
+      currentScale = 1.0;
+      updateViewerZoomUI();
+      await renderPDFPages();
+    } catch(err) {
+      console.error('PDF loading error:', err);
+      pagesContainer.innerHTML = `<div style="color:#ffaaaa; padding:2rem; text-align:center;">
+        ❌ PDF لوڈ کرنے میں خرابی: ${err.message}<br><br>
+        فائل راستہ: ${book.pdf}<br>
+        یقینی بنائیں کہ PDF فائل موجود ہے۔
+      </div>`;
+    }
+  }
+  
+  function updateViewerZoomUI() {
+    viewerZoomSlider.value = currentScale;
+    viewerZoomPercent.innerText = Math.round(currentScale * 100) + '%';
+  }
+  
+  function setScale(newScale) {
+    newScale = Math.min(2.5, Math.max(0.5, newScale));
+    if(Math.abs(currentScale - newScale) < 0.01) return;
+    currentScale = newScale;
+    updateViewerZoomUI();
+    if(currentPDFDoc) {
+      renderPDFPages();
+    }
+  }
+  
+  // Event listeners for viewer controls
+  closeBtn.addEventListener('click', () => {
+    viewerModal.style.display = 'none';
+    pagesContainer.innerHTML = '';
+    pagesContainer.style.direction = '';
+    if(currentPDFDoc) {
+      currentPDFDoc = null;
+    }
+  });
+  
+  zoomInBtn.addEventListener('click', () => setScale(currentScale + 0.15));
+  zoomOutBtn.addEventListener('click', () => setScale(currentScale - 0.15));
+  viewerZoomSlider.addEventListener('input', (e) => setScale(parseFloat(e.target.value)));
+  
+  singlePageBtn.addEventListener('click', () => {
+    currentPageMode = 'single';
+    singlePageBtn.classList.add('active');
+    twoPageBtn.classList.remove('active');
+    pagesContainer.style.direction = '';
+    if(currentPDFDoc) renderPDFPages();
+  });
+  
+  twoPageBtn.addEventListener('click', () => {
+    currentPageMode = 'two';
+    twoPageBtn.classList.add('active');
+    singlePageBtn.classList.remove('active');
+    if(currentPDFDoc) renderPDFPages();
+  });
+  
+  // Main zoom slider for cover gallery
+  mainZoomSlider.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    mainZoomPercent.innerText = Math.round(val * 100) + '%';
+    const gallery = document.querySelector('.gallery');
+    const baseMin = 200;
+    const newMin = baseMin * val;
+    gallery.style.setProperty('grid-template-columns', `repeat(auto-fill, minmax(${newMin}px, ${newMin * 1.2}px))`);
+  });
+  
+  // Close modal on escape key
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && viewerModal.style.display === 'flex') {
+      closeBtn.click();
+    }
+  });
+  
+  // Initialize: load library from JSON
+  loadLibrary();
+  
+  // Add custom scrollbar styling
+  const style = document.createElement('style');
+  style.textContent = `
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #2b2b28; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #f5cb5c; }
+    .pdf-pages-container::-webkit-scrollbar-track { background: #1a1a18; }
+  `;
+  document.head.appendChild(style);
+  
+  console.log("Urdu PDF Library loaded — Reading from library.json, RTL two-page view enabled");
+</script>
 </body>
-
 </html>
