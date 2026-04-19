@@ -144,6 +144,19 @@
       overflow: hidden;
     }
 
+    /* Fullscreen mode styling */
+    .pdf-viewer-overlay:fullscreen {
+      background: #000000;
+    }
+    
+    .pdf-viewer-overlay:-webkit-full-screen {
+      background: #000000;
+    }
+    
+    .pdf-viewer-overlay:-moz-full-screen {
+      background: #000000;
+    }
+
     .viewer-toolbar {
       background: #1e2a1c;
       color: white;
@@ -154,6 +167,7 @@
       justify-content: space-between;
       gap: 12px;
       border-bottom: 2px solid #d4af37;
+      flex-shrink: 0;
     }
 
     .toolbar-group {
@@ -228,6 +242,16 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
+    /* Fullscreen button specific styling */
+    .maximize-btn {
+      background: #d4af37;
+    }
+    
+    .maximize-btn svg {
+      fill: #1e2a1c;
+      vertical-align: middle;
+    }
+
     @media (max-width: 700px) {
       .library-header {
         flex-direction: column;
@@ -266,6 +290,7 @@
       <button id="closePdfBtn" class="close-viewer">✖ بند کریں</button>
       <button id="zoomInBtn">➕ زوم ان</button>
       <button id="zoomOutBtn">➖ زوم آؤٹ</button>
+      <button id="fullscreenBtn" class="maximize-btn" title="مکمل سکرین (Fullscreen)">🗖 مکمل سکرین</button>
       <span style="margin:0 4px;">|</span>
       <span>📄 مقیاس: </span>
       <span id="viewerZoomPercent">100%</span>
@@ -296,6 +321,7 @@
   const closeBtn = document.getElementById('closePdfBtn');
   const zoomInBtn = document.getElementById('zoomInBtn');
   const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
   const viewerZoomSlider = document.getElementById('viewerZoomSlider');
   const viewerZoomPercent = document.getElementById('viewerZoomPercent');
   const singlePageBtn = document.getElementById('singlePageBtn');
@@ -537,6 +563,48 @@
     }
   }
   
+  // Fullscreen functionality
+  function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      // Enter fullscreen
+      const elem = viewerModal;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
+      }
+      fullscreenBtn.textContent = '🗞 چھوٹی سکرین';
+      fullscreenBtn.title = 'Exit Fullscreen';
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) { /* IE/Edge */
+        document.msExitFullscreen();
+      }
+      fullscreenBtn.textContent = '🗖 مکمل سکرین';
+      fullscreenBtn.title = 'مکمل سکرین (Fullscreen)';
+    }
+  }
+  
+  // Listen for fullscreen change events to update button text
+  function handleFullscreenChange() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      fullscreenBtn.textContent = '🗖 مکمل سکرین';
+      fullscreenBtn.title = 'مکمل سکرین (Fullscreen)';
+    } else {
+      fullscreenBtn.textContent = '🗞 چھوٹی سکرین';
+      fullscreenBtn.title = 'Exit Fullscreen';
+    }
+  }
+  
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  
   async function openPDFViewer(bookIndex) {
     const book = libraryData[bookIndex];
     if(!book || !book.title) {
@@ -597,6 +665,14 @@
   }
   
   closeBtn.addEventListener('click', () => {
+    // Exit fullscreen if active before closing
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
     viewerModal.style.display = 'none';
     pagesContainer.innerHTML = '';
     pagesContainer.style.direction = '';
@@ -604,6 +680,8 @@
       currentPDFDoc = null;
     }
   });
+  
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
   
   zoomInBtn.addEventListener('click', () => setScale(currentScale + 0.15));
   zoomOutBtn.addEventListener('click', () => setScale(currentScale - 0.15));
@@ -635,7 +713,16 @@
   
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape' && viewerModal.style.display === 'flex') {
-      closeBtn.click();
+      // If in fullscreen, exit fullscreen first
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      } else {
+        closeBtn.click();
+      }
     }
   });
   
