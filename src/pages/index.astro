@@ -36,12 +36,21 @@ const projects = (await getCollection('work'))
 					</div>
 				</Hero>
 
+				<div class="hero-portrait-wrap">
 				<img
-					alt="Abid smiling in black suit"
-					width="120"
-					height="155"
-					src="/assets/abid.jpg"
+					alt="Abid Nasim standing"
+					width="260"
+					height="488"
+					src="/assets/AN-Rotana.jpg"
+					class="hero-portrait"
 				/>
+				<div class="hero-portrait-overlay">
+					<img
+						alt="Abid Nasim standing"
+						src="/assets/AN-Rotana.jpg"
+					/>
+				</div>
+			</div>
 			</header>
 
 			<Skills locale="en" />
@@ -101,6 +110,25 @@ const projects = (await getCollection('work'))
 	</div>
 </BaseLayout>
 
+<script>
+	document.querySelectorAll('.hero-portrait-wrap').forEach((wrap) => {
+		const overlay = wrap.querySelector('.hero-portrait-overlay');
+		let timer = null;
+
+		wrap.addEventListener('mouseenter', () => {
+			overlay.classList.add('visible');
+			timer = setTimeout(() => {
+				overlay.classList.remove('visible');
+			}, 15000);
+		});
+
+		wrap.addEventListener('mouseleave', () => {
+			clearTimeout(timer);
+			overlay.classList.remove('visible');
+		});
+	});
+</script>
+
 <style>
 	.hero {
 		display: flex;
@@ -113,12 +141,18 @@ const projects = (await getCollection('work'))
 		display: none;
 	}
 
-	.hero img {
-		aspect-ratio: 5 / 4;
-		object-fit: cover;
-		object-position: top;
+	.hero-portrait-wrap {
+		aspect-ratio: 853 / 1600;
+		overflow: hidden;
 		border-radius: 1.5rem;
 		box-shadow: var(--shadow-md);
+	}
+
+	.hero-portrait {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: top;
 	}
 
 	@media (min-width: 50em) {
@@ -135,10 +169,8 @@ const projects = (await getCollection('work'))
 			gap: 0.5rem;
 		}
 
-		.hero img {
-			aspect-ratio: 3 / 4;
+		.hero-portrait-wrap {
 			border-radius: 4.5rem;
-			object-fit: cover;
 		}
 	}
 

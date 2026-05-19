@@ -12,12 +12,16 @@ import Hero from '../components/Hero.astro';
 				title="About"
 				tagline="Let me introduce myself."
 			>
+				<div class="about-images">
 				<img
-					width="50%"
-					height="auto"
+					src="/assets/AN_QR.png"
+					alt="QR Code"
+				/>
+				<img
 					src="/assets/an-office.jpg"
 					alt="At Work"
 				/>
+			</div>
 			</Hero>
 
 			<section>
@@ -70,10 +74,18 @@ import Hero from '../components/Hero.astro';
 		gap: 3.5rem;
 	}
 
-	img {
+	.about-images {
+		display: flex;
+		gap: 1.5rem;
 		margin-top: 1.5rem;
+	}
+
+	.about-images img {
+		width: 50%;
+		height: auto;
 		border-radius: 1.5rem;
 		box-shadow: var(--shadow-md);
+		object-fit: cover;
 	}
 
 	section {
