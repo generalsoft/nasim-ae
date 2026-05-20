@@ -21,6 +21,7 @@ export const ui = {
     'home.selectedWork': 'Selected Work',
     'home.workDesc': 'Take a look below at some of my featured work for clients from the past few years.',
     'home.viewAll': 'View All',
+    'home.portraitTooltip': 'See About for my contact card QR code',
 
     'work.title': 'My Work | Abid Nasim',
     'work.heading': 'My Work',
@@ -45,6 +46,23 @@ export const ui = {
     'about.education': 'Education',
     'about.certifications': 'Certifications',
     'about.abilities': 'Abilities',
+
+    'nav.contact': 'Contact',
+
+    'contact.title': 'Contact | Abid Nasim',
+    'contact.desc': 'Get in touch with Abid Nasim',
+    'contact.heading': 'Contact',
+    'contact.tagline': "I'd love to hear from you.",
+    'contact.email': 'Email',
+    'contact.social': 'Social',
+    'contact.form.name': 'Name',
+    'contact.form.email': 'Email',
+    'contact.form.subject': 'Subject',
+    'contact.form.message': 'Message',
+    'contact.form.send': 'Send Message',
+    'contact.form.sending': 'Sending…',
+    'contact.form.success': 'Message sent! I will get back to you soon.',
+    'contact.form.error': 'Something went wrong. Please email me directly at abid@nasim.us',
 
     '404.title': 'Not Found',
     '404.desc': '404 Error — this page was not found',
@@ -89,6 +107,7 @@ export const ui = {
     'home.selectedWork': 'أعمال مختارة',
     'home.workDesc': 'ألق نظرة أدناه على بعض أبرز أعمالي للعملاء خلال السنوات الماضية.',
     'home.viewAll': 'عرض الكل',
+    'home.portraitTooltip': 'انظر صفحة "حول" للحصول على رمز QR لبطاقة التواصل',
 
     'work.title': 'أعمالي | عابد نسيم',
     'work.heading': 'أعمالي',
@@ -113,6 +132,23 @@ export const ui = {
     'about.education': 'التعليم',
     'about.certifications': 'الشهادات',
     'about.abilities': 'القدرات',
+
+    'nav.contact': 'اتصل',
+
+    'contact.title': 'اتصل | عابد نسيم',
+    'contact.desc': 'تواصل مع عابد نسيم',
+    'contact.heading': 'اتصل',
+    'contact.tagline': 'يسعدني أن أسمع منك.',
+    'contact.email': 'البريد الإلكتروني',
+    'contact.social': 'وسائل التواصل',
+    'contact.form.name': 'الاسم',
+    'contact.form.email': 'البريد الإلكتروني',
+    'contact.form.subject': 'الموضوع',
+    'contact.form.message': 'الرسالة',
+    'contact.form.send': 'أرسل الرسالة',
+    'contact.form.sending': 'جارٍ الإرسال…',
+    'contact.form.success': 'تم إرسال الرسالة! سأتواصل معك قريباً.',
+    'contact.form.error': 'حدث خطأ. يرجى مراسلتي مباشرة على abid@nasim.us',
 
     '404.title': 'غير موجود',
     '404.desc': 'خطأ 404 — الصفحة غير موجودة',

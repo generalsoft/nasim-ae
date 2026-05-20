@@ -1,0 +1,317 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+import Hero from '../components/Hero.astro';
+import Icon from '../components/Icon.astro';
+import { t } from '../i18n/utils';
+
+const locale = 'en';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
+  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
+};
+---
+
+<BaseLayout title={t(locale, 'contact.title')} description={t(locale, 'contact.desc')}>
+  <div class="stack gap-20">
+    <main class="wrapper contact">
+      <Hero
+        title={t(locale, 'contact.heading')}
+        tagline={t(locale, 'contact.tagline')}
+      />
+
+      <div class="contact-grid">
+        <!-- Contact form -->
+        <section class="contact-form-section">
+          <h2 class="section-title">{t(locale, 'contact.form.send')}</h2>
+          <form
+            class="contact-form"
+            id="contact-form"
+            data-msg-sending={t(locale, 'contact.form.sending')}
+            data-msg-success={t(locale, 'contact.form.success')}
+            data-msg-error={t(locale, 'contact.form.error')}
+          >
+            <div class="form-group">
+              <label for="name">{t(locale, 'contact.form.name')}</label>
+              <input type="text" id="name" name="name" required maxlength="100" />
+            </div>
+            <div class="form-group">
+              <label for="email">{t(locale, 'contact.form.email')}</label>
+              <input type="email" id="email" name="email" required maxlength="100" />
+            </div>
+            <div class="form-group">
+              <label for="subject">{t(locale, 'contact.form.subject')}</label>
+              <input type="text" id="subject" name="subject" required maxlength="200" />
+            </div>
+            <div class="form-group">
+              <label for="message">{t(locale, 'contact.form.message')}</label>
+              <textarea id="message" name="message" rows="6" required maxlength="5000"></textarea>
+            </div>
+            <div class="form-status" id="form-status" hidden></div>
+            <button type="submit" class="submit-btn" id="submit-btn">
+              <Icon icon="paper-plane-tilt" size="1.1em" />
+              <span>{t(locale, 'contact.form.send')}</span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Contact info -->
+        <aside class="contact-info">
+          <section>
+            <h2 class="section-title">{t(locale, 'contact.email')}</h2>
+            <a href="mailto:abid@nasim.us" class="contact-link">
+              <Icon icon="envelope" size="1.2em" />
+              abid@nasim.us
+            </a>
+          </section>
+
+          <section>
+            <h2 class="section-title">{t(locale, 'contact.social')}</h2>
+            <div class="social-links">
+              <a href="https://twitter.com/generalsoft" target="_blank" class="contact-link">
+                <Icon icon="twitter-logo" size="1.2em" />
+                Twitter
+              </a>
+              <a href="https://github.com/generalsoft" target="_blank" class="contact-link">
+                <Icon icon="github-logo" size="1.2em" />
+                GitHub
+              </a>
+              <a href="https://www.linkedin.com/in/generalsoft" target="_blank" class="contact-link">
+                <Icon icon="linkedin-logo" size="1.2em" />
+                LinkedIn
+              </a>
+              <a href="https://www.youtube.com/@AbidNasim/" target="_blank" class="contact-link">
+                <Icon icon="youtube-logo" size="1.2em" />
+                YouTube
+              </a>
+              <a href="https://twitch.tv/generalsoft" target="_blank" class="contact-link">
+                <Icon icon="twitch-logo" size="1.2em" />
+                Twitch
+              </a>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<script type="module" define:vars={{ firebaseConfig }}>
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const form = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const statusEl = document.getElementById('form-status');
+  const btnText = submitBtn.querySelector('span');
+  const originalBtnText = btnText.textContent;
+  const msgSending = form.dataset.msgSending;
+  const msgSuccess = form.dataset.msgSuccess;
+  const msgError = form.dataset.msgError;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    btnText.textContent = msgSending;
+    statusEl.hidden = true;
+
+    try {
+      const docRef = await addDoc(collection(db, 'contacts'), {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        subject: form.subject.value.trim(),
+        message: form.message.value.trim(),
+        createdAt: serverTimestamp(),
+      });
+
+      statusEl.className = 'form-status success';
+      statusEl.textContent = msgSuccess;
+      statusEl.hidden = false;
+      form.reset();
+    } catch (err) {
+      console.error('❌ Firebase error:', err);
+      statusEl.className = 'form-status error';
+      statusEl.textContent = msgError;
+      statusEl.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+      btnText.textContent = originalBtnText;
+    }
+  });
+</script>
+
+<style>
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+  }
+
+  .contact-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .section-title {
+    font-size: var(--text-xl);
+    color: var(--gray-0);
+    margin-bottom: 1rem;
+  }
+
+  /* ── Form ────────────────────────────── */
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .form-group label {
+    font-size: var(--text-sm);
+    color: var(--gray-300);
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-800);
+    border-radius: 0.75rem;
+    background: var(--gray-999);
+    color: var(--gray-0);
+    font-size: var(--text-base);
+    font-family: inherit;
+    transition: border-color var(--theme-transition), box-shadow var(--theme-transition);
+    outline: none;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent-regular);
+    box-shadow: 0 0 0 3px var(--accent-overlay);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    background: var(--gradient-accent);
+    color: var(--accent-text-over);
+    border: none;
+    border-radius: 2rem;
+    font-size: var(--text-base);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity var(--theme-transition), transform var(--theme-transition);
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .submit-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── Form status messages ────────────── */
+
+  .form-status {
+    padding: 0.875rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .form-status.success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .form-status.error {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  /* ── Contact info aside ──────────────── */
+
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-200);
+    text-decoration: none;
+    font-size: var(--text-base);
+    padding: 0.5rem 0;
+    transition: color var(--theme-transition);
+  }
+
+  .contact-link:hover {
+    color: var(--accent-regular);
+  }
+
+  .social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* ── Responsive ──────────────────────── */
+
+  @media (min-width: 50em) {
+    .contact {
+      display: grid;
+      grid-template-columns: 1fr 60% 1fr;
+    }
+
+    .contact > :global(:first-child) {
+      grid-column: 1 / -1;
+    }
+
+    .contact-grid {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+</style>

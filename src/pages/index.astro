@@ -37,6 +37,7 @@ const projects = (await getCollection('work'))
 				</Hero>
 
 				<div class="hero-portrait-wrap">
+				<span class="hero-portrait-tooltip">See About for my contact card QR code</span>
 				<img
 					alt="Abid Nasim standing"
 					width="260"
@@ -44,12 +45,6 @@ const projects = (await getCollection('work'))
 					src="/assets/AN-Rotana.jpg"
 					class="hero-portrait"
 				/>
-				<div class="hero-portrait-overlay">
-					<img
-						alt="Abid Nasim standing"
-						src="/assets/AN-Rotana.jpg"
-					/>
-				</div>
 			</div>
 			</header>
 
@@ -110,24 +105,7 @@ const projects = (await getCollection('work'))
 	</div>
 </BaseLayout>
 
-<script>
-	document.querySelectorAll('.hero-portrait-wrap').forEach((wrap) => {
-		const overlay = wrap.querySelector('.hero-portrait-overlay');
-		let timer = null;
 
-		wrap.addEventListener('mouseenter', () => {
-			overlay.classList.add('visible');
-			timer = setTimeout(() => {
-				overlay.classList.remove('visible');
-			}, 15000);
-		});
-
-		wrap.addEventListener('mouseleave', () => {
-			clearTimeout(timer);
-			overlay.classList.remove('visible');
-		});
-	});
-</script>
 
 <style>
 	.hero {
