@@ -1,14 +1,14 @@
 ---
 import CallToAction from './CallToAction.astro';
 import Icon from './Icon.astro';
-import { getLocaleFromUrl, t } from '../i18n/utils';
+import { getLocaleFromUrl, localizedHref, t } from '../i18n/utils';
 
 const locale = getLocaleFromUrl(Astro.url);
 ---
 
 <aside>
 	<h2>{t(locale, 'cta.heading')}</h2>
-	<CallToAction href="mailto:abid@nasim.us">
+	<CallToAction href={localizedHref(locale, '/contact/')}>
 		{t(locale, 'cta.button')}
 		<Icon icon="paper-plane-tilt" size="1.2em" />
 	</CallToAction>
