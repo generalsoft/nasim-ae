@@ -62,7 +62,7 @@ export const ui = {
     'contact.form.send': 'Send Message',
     'contact.form.sending': 'Sending…',
     'contact.form.success': 'Message sent! I will get back to you soon.',
-    'contact.form.error': 'Something went wrong. Please email me directly at abid@nasim.us',
+    'contact.form.error': 'Something went wrong. Please email me directly at abid@nasim.ae',
 
     '404.title': 'Not Found',
     '404.desc': '404 Error — this page was not found',
@@ -148,7 +148,7 @@ export const ui = {
     'contact.form.send': 'أرسل الرسالة',
     'contact.form.sending': 'جارٍ الإرسال…',
     'contact.form.success': 'تم إرسال الرسالة! سأتواصل معك قريباً.',
-    'contact.form.error': 'حدث خطأ. يرجى مراسلتي مباشرة على abid@nasim.us',
+    'contact.form.error': 'حدث خطأ. يرجى مراسلتي مباشرة على abid@nasim.ae',
 
     '404.title': 'غير موجود',
     '404.desc': 'خطأ 404 — الصفحة غير موجودة',

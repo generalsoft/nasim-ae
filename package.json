@@ -2,7 +2,7 @@
   "name": "nasim",
   "version": "1.0.0",
   "type": "module",
-  "description": "\"# nasim.github.io\"",
+  "description": "\"# nasim-ae.github.io\"",
   "private": true,
   "scripts": {
     "dev": "astro dev",
@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/generalsoft/nasim-us.git"
+    "url": "git+https://github.com/generalsoft/nasim-ae.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/generalsoft/nasim-us/issues"
+    "url": "https://github.com/generalsoft/nasim-ae/issues"
   },
-  "homepage": "https://github.com/generalsoft/nasim-us#readme",
+  "homepage": "https://github.com/generalsoft/nasim-ae#readme",
   "devDependencies": {
     "astro": "^5.2.3",
     "typescript": "^5.7.3"

@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
     output: 'static',
     i18n: {
-        defaultLocale: 'en',
+        defaultLocale: 'ar',
         locales: ['en', 'ar'],
         routing: {
             prefixDefaultLocale: false,
