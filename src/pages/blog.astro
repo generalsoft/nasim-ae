@@ -17,13 +17,13 @@ const posts = (await getCollection('blog'))
 
 const postImages = posts.map((p) => ({
   src: p.data.img,
-  href: `/blog/${p.slug}`,
+  href: `/blog/${p.id}`,
 }));
 
 const carouselArticles = posts.map((p) => ({
   title: p.data.title,
   description: p.data.description,
-  href: `/blog/${p.slug}`,
+  href: `/blog/${p.id}`,
   tags: p.data.tags ?? [],
 }));
 ---

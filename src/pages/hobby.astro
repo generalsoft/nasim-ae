@@ -17,13 +17,13 @@ const hobbies = (await getCollection('hobby'))
 
 const hobbyImages = hobbies.map((h) => ({
   src: h.data.img,
-  href: `/hobby/${h.slug}`,
+  href: `/hobby/${h.id}`,
 }));
 
 const carouselArticles = hobbies.map((h) => ({
   title: h.data.title,
   description: h.data.description,
-  href: `/hobby/${h.slug}`,
+  href: `/hobby/${h.id}`,
   tags: h.data.tags ?? [],
 }));
 ---

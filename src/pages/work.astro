@@ -17,13 +17,13 @@ const projects = (await getCollection('work'))
 
 const projectImages = projects.map((p) => ({
   src: p.data.img,
-  href: `/work/${p.slug}`,
+  href: `/work/${p.id}`,
 }));
 
 const carouselArticles = projects.map((p) => ({
   title: p.data.title,
   description: p.data.description,
-  href: `/work/${p.slug}`,
+  href: `/work/${p.id}`,
   tags: p.data.tags ?? [],
 }));
 ---
