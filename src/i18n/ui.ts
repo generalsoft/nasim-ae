@@ -70,7 +70,7 @@ export const ui = {
     '404.tagline': 'Not found',
 
     'footer.copyright': 'Copyrights: Abid Nasim',
-    'footer.powered': 'powered by Generalsoft',
+    'footer.powered': 'Website developed by <a href="https://www.generalsoft.io" rel="nofollow">Generalsoft</a>',
 
     'lang.switch': 'العربية',
     'lang.code': 'ar',
@@ -156,7 +156,7 @@ export const ui = {
     '404.tagline': 'غير موجود',
 
     'footer.copyright': 'حقوق النشر: عابد نسيم',
-    'footer.powered': 'بدعم من Generalsoft',
+    'footer.powered': 'تم تطوير الموقع بواسطة <a href="https://www.generalsoft.io" rel="nofollow">جنرال سافت</a>',
 
     'lang.switch': 'English',
     'lang.code': 'en',
