@@ -1,19 +1,10 @@
 ---
-interface ArticleInfo {
-  title: string;
-  description: string;
-  href: string;
-  tags?: string[];
-}
-
 interface Props {
   images: { src: string; href?: string }[];
   alt?: string;
-  articles?: ArticleInfo[];
-  readMoreLabel?: string;
 }
 
-const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.props;
+const { images, alt = '' } = Astro.props;
 ---
 
 <div class="carousel" data-carousel>
@@ -40,20 +31,9 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
   </nav>
 </div>
 
-  <div class="carousel-detail" data-carousel-detail>
-    <div class="carousel-detail-inner">
-      <h3 class="carousel-detail-title" data-detail-title></h3>
-      <p class="carousel-detail-desc" data-detail-desc></p>
-      <div class="carousel-detail-tags" data-detail-tags></div>
-      <a class="carousel-detail-link" data-detail-link href="#">
-        {readMoreLabel} <span aria-hidden="true">→</span>
-      </a>
-    </div>
-  </div>
-
 <style>
   .carousel {
-    --carousel-width: min(48rem, 100%);
+    --carousel-width: min(60rem, 100%);
     width: var(--carousel-width);
     margin-inline: auto;
     position: relative;
@@ -62,8 +42,6 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
   .track {
     display: flex;
     overflow-x: auto;
-    border-radius: 0.75rem;
-    border: 1px solid var(--gray-800);
   }
 
   .track::-webkit-scrollbar {
@@ -85,7 +63,6 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
     flex: 0 0 100%;
     width: 100%;
     object-fit: contain;
-    background: var(--gray-950);
   }
 
   .dots {
@@ -109,83 +86,6 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
   .dot.active {
     background: var(--gray-300);
   }
-
-  /* ---- detail panel ---- */
-  .carousel-detail {
-    --detail-width: min(48rem, 100%);
-    width: var(--detail-width);
-    margin-inline: auto;
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background: var(--gray-900);
-    border: 1px solid var(--gray-800);
-    border-radius: 0.75rem;
-    opacity: 0;
-    transform: translateY(0.5rem);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: none;
-  }
-
-  .carousel-detail.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .carousel-detail-inner {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .carousel-detail-title {
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--gray-100);
-    margin: 0;
-  }
-
-  .carousel-detail-desc {
-    font-size: var(--text-md);
-    color: var(--gray-400);
-    line-height: 1.7;
-    margin: 0;
-  }
-
-  .carousel-detail-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .carousel-detail-tag {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    background: var(--gray-800);
-    color: var(--gray-300);
-    border-radius: 999px;
-    font-size: var(--text-sm);
-  }
-
-  .carousel-detail-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    align-self: flex-start;
-    margin-top: 0.5rem;
-    padding: 0.5rem 1.25rem;
-    background: var(--gray-200);
-    color: var(--gray-900);
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: var(--text-sm);
-    text-decoration: none;
-    transition: background var(--theme-transition);
-  }
-
-  .carousel-detail-link:hover {
-    background: var(--gray-100);
-  }
 </style>
 
 <script>
@@ -195,37 +95,17 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
       this.track = el.querySelector('[data-track]');
       this.dots = [...el.querySelectorAll('[data-dot]')];
       this.slides = [...el.querySelectorAll('.slide')];
-      this.slideLinks = [...el.querySelectorAll('[data-slide-link]')];
-      this.index = 0;
+
       this.interval = null;
       this.delay = 4000;
-
-      // Detail panel elements
-      this.detailPanel = document.querySelector('[data-carousel-detail]');
-      this.detailTitle = document.querySelector('[data-detail-title]');
-      this.detailDesc = document.querySelector('[data-detail-desc]');
-      this.detailTags = document.querySelector('[data-detail-tags]');
-      this.detailLink = document.querySelector('[data-detail-link]');
+      this.index = 0;
 
       if (this.slides.length < 2) return;
-
-      // Intercept slide-link clicks to show detail instead of navigating
-      this.slideLinks.forEach((link) => {
-        link.addEventListener('click', (e) => {
-          const idx = Number(link.dataset.index);
-          if (!isNaN(idx) && this.articles && this.articles[idx]) {
-            e.preventDefault();
-            this.goTo(idx);
-            this.showDetail(idx);
-          }
-        });
-      });
 
       this.dots.forEach((dot) => {
         dot.addEventListener('click', () => {
           const idx = Number(dot.dataset.index);
           this.goTo(idx);
-          this.showDetail(idx);
         });
       });
 
@@ -236,14 +116,7 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
       this.track.addEventListener('scroll', () => this.syncFromScroll(), { passive: true });
 
       this.goTo(0);
-      this.showDetail(0);
       this.play();
-    }
-
-    setArticles(articles) {
-      this.articles = articles;
-      // Refresh detail for the current slide now that articles are available
-      this.showDetail(this.index);
     }
 
     goTo(i) {
@@ -259,7 +132,6 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
     next() {
       const nextIdx = (this.index + 1) % this.slides.length;
       this.goTo(nextIdx);
-      this.showDetail(nextIdx);
     }
 
     syncFromScroll() {
@@ -268,34 +140,11 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
       if (i !== this.index) {
         this.index = i;
         this.updateDots();
-        this.showDetail(i);
       }
     }
 
     updateDots() {
       this.dots.forEach((d, i) => d.classList.toggle('active', i === this.index));
-    }
-
-    showDetail(i) {
-      if (!this.detailPanel || !this.articles || !this.articles[i]) return;
-
-      const article = this.articles[i];
-      this.detailTitle.textContent = article.title;
-      this.detailDesc.textContent = article.description;
-      this.detailLink.href = article.href;
-
-      // Render tags
-      this.detailTags.innerHTML = '';
-      if (article.tags && article.tags.length > 0) {
-        article.tags.forEach((tag) => {
-          const span = document.createElement('span');
-          span.className = 'carousel-detail-tag';
-          span.textContent = tag;
-          this.detailTags.appendChild(span);
-        });
-      }
-
-      this.detailPanel.classList.add('visible');
     }
 
     play() {
@@ -309,18 +158,5 @@ const { images, alt = '', articles = [], readMoreLabel = 'Read more' } = Astro.p
     }
   }
 
-  document.querySelectorAll('[data-carousel]').forEach((el) => {
-    const carousel = new ImageCarousel(el);
-
-    // Read article data from the hidden data element
-    const dataEl = document.getElementById('carousel-articles-data');
-    if (dataEl && dataEl.dataset.articles) {
-      try {
-        const articles = JSON.parse(dataEl.dataset.articles);
-        carousel.setArticles(articles);
-      } catch (e) {
-        console.warn('Failed to parse carousel articles data', e);
-      }
-    }
-  });
+  document.querySelectorAll('[data-carousel]').forEach((el) => new ImageCarousel(el));
 </script>

@@ -1,5 +1,5 @@
 ---
-title: Full SME ERP Solution — Elahi Electronics
+title: Full SME ERP Solution — for Small & Medium Enterprises
 description: |
   Architected and delivered a complete ERP solution for a Small & Medium Enterprise, spanning BI, CRM, SharePoint portals, and Silverlight-based rich client applications.
 publishDate: 2026-04-12 09:30:00
@@ -15,7 +15,7 @@ img_alt: SME ERP Architecture
 
 ## Context
 
-In mid-2009, Elahi Electronics — a growing SME in the electronics distribution space — needed a full Enterprise Resource Planning (ERP) system. Off-the-shelf ERP solutions were priced for enterprises, well beyond their budget. I was engaged to architect and build a custom ERP from the ground up, spanning customer management, orders, billing, vendor management, treasury, HR, and supply chain.
+In mid-2009, a growing SME in the electronics distribution space — needed a full Enterprise Resource Planning (ERP) system. Off-the-shelf ERP solutions were priced for enterprises, well beyond their budget. I was engaged to architect and build a custom ERP from the ground up, spanning customer management, orders, billing, vendor management, treasury, HR, and supply chain.
 
 The project ran for 18 months, from June 2009 through November 2010, with a small team that I led as Architect and Lead Developer.
 

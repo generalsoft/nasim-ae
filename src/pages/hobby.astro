@@ -4,7 +4,6 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 import ContactCTA from '../components/ContactCTA.astro';
-import PortfolioPreview from '../components/PortfolioPreview.astro';
 import Hero from '../components/Hero.astro';
 import Grid from '../components/Grid.astro';
 import ImageCarousel from '../components/ImageCarousel.astro';
@@ -38,15 +37,6 @@ const carouselArticles = hobbies.map((h) => ({
 			/>
 			<div id="carousel-articles-data" data-articles={JSON.stringify(carouselArticles)} hidden></div>
 		<ImageCarousel images={hobbyImages} alt="Hobby project preview" />
-			<Grid variant="offset">
-				{
-					hobbies.map((item) => (
-						<li>
-							<PortfolioPreview project={item} basePath="/hobby" />
-						</li>
-					))
-				}
-			</Grid>
 		</main>
 		<ContactCTA />
 	</div>

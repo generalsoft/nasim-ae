@@ -4,7 +4,6 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 import ContactCTA from '../../components/ContactCTA.astro';
-import PortfolioPreview from '../../components/PortfolioPreview.astro';
 import Hero from '../../components/Hero.astro';
 import Grid from '../../components/Grid.astro';
 import ImageCarousel from '../../components/ImageCarousel.astro';
@@ -39,15 +38,6 @@ const carouselArticles = posts.map((p) => ({
 			/>
 			<div id="carousel-articles-data" data-articles={JSON.stringify(carouselArticles)} hidden></div>
 		<ImageCarousel images={postImages} alt="معاينة مقال" readMoreLabel={t(locale, 'carousel.readmore')} />
-			<Grid variant="offset">
-				{
-					posts.map((post) => (
-						<li>
-							<PortfolioPreview project={post} basePath="/ar/blog" />
-						</li>
-					))
-				}
-			</Grid>
 		</main>
 		<ContactCTA />
 	</div>

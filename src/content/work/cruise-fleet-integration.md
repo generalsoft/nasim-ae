@@ -1,7 +1,7 @@
 ---
-title: Cruise Ship Fleet Integration — 30+ Ships
+title: Cruise Ship Fleet Integration
 description: |
-  Integrated a new Property Management System across 30+ cruise ships, with GIS-based customs reporting, Dynamics CRM build automation, and AS/400 host integration.
+  Integrated a new Property Management System across the fleet of cruise ships, with GIS-based customs reporting, Dynamics CRM build automation, and AS/400 host integration.
 publishDate: 2026-04-15 10:00:00
 tags:
   - Integration
@@ -15,13 +15,13 @@ img_alt: Cruise Ship Fleet Integration
 
 ## Context
 
-In late 2012, a major cruise line headquartered in Miramar, Florida, needed to roll out a new Property Management System (PMS) across its entire fleet — over 30 ships, each essentially a floating hotel with thousands of guests. The PMS replacement touched every onboard system: reservations, housekeeping, dining, billing, and customs reporting.
+In late 2012, a major cruise line headquartered in Miramar, Florida, needed to roll out a new Property Management System (PMS) across its entire fleet — over the fleet of ships, each essentially a floating hotel with thousands of guests. The PMS replacement touched every onboard system: reservations, housekeeping, dining, billing, and customs reporting.
 
 I served as the Architect and Lead Developer, responsible for the integration layer that would connect the new PMS to the fleet's existing infrastructure — including JD Edwards on AS/400, Dynamics CRM, and GIS-based customs systems.
 
 ## Goal
 
-> Replace the Property Management System across 30+ ships without disrupting onboard operations, while integrating customs reporting based on GIS data.
+> Replace the Property Management System across the fleet without disrupting onboard operations, while integrating customs reporting based on GIS data.
 
 The integration had to:
 
@@ -53,7 +53,7 @@ The integration had to:
 - Maritime satellite internet is slow and expensive — batch sizes and compression had to be carefully tuned.
 - Each country had its own customs form format, some requiring XML (e.g., UN/EDIFACT), others flat files.
 - AS/400 integration required EBCDIC-to-ASCII conversion and fixed-width field parsing — a world apart from modern APIs.
-- Coordinating PMS cutovers across 30 ships meant staggered rollouts over several months, with rollback plans per ship.
+- Coordinating PMS cutovers across the fleet ships meant staggered rollouts over several months, with rollback plans per ship.
 
 ## Outcome
 
