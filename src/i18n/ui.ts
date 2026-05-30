@@ -26,7 +26,7 @@ export const ui = {
     'work.title': 'My Work | Abid Nasim',
     'work.heading': 'My Work',
     'work.desc': "Learn about Nasim's most recent projects",
-    'work.tagline': 'See my most recent projects below to get an idea of my past experience.',
+    'work.tagline': 'See my most recent projects below to get an idea of my past experience. With permission from <a href="https://generalsoft.com/" target="_blank" rel="noopener noreferrer">Generalsoft Corporation</a>/<a href="https://generalsoft.ae/" target="_blank" rel="noopener noreferrer">Generalsoft FZ-LLC</a>',
 
     'blog.title': 'Blog | Abid Nasim',
     'blog.desc': "Read Nasim's latest blog posts",
@@ -112,7 +112,7 @@ export const ui = {
     'work.title': 'أعمالي | عابد نسيم',
     'work.heading': 'أعمالي',
     'work.desc': 'تعرّف على أحدث مشاريع نسيم',
-    'work.tagline': 'شاهد أحدث مشاريعي أدناه للتعرف على خبراتي السابقة.',
+    'work.tagline': 'شاهد أحدث مشاريعي أدناه للتعرف على خبراتي السابقة. بترخيص من <a href="https://generalsoft.com/" target="_blank" rel="noopener noreferrer">Generalsoft Corporation</a>/<a href="https://generalsoft.ae/" target="_blank" rel="noopener noreferrer">Generalsoft FZ-LLC</a>',
 
     'blog.title': 'المدونة | عابد نسيم',
     'blog.desc': 'اقرأ أحدث مقالات نسيم',
