@@ -1,3 +1,0 @@
-# Nasim.AE
-
-## Personal Website
