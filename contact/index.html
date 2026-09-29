@@ -256,6 +256,51 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="post-content">
     <p>يسعدني أن أسمع منك.</p>
 
+<form class="contact-form" id="contact-form" novalidate="" data-source="nasim.ae" data-locale="ar" data-collection="contacts" data-sending-label="جارٍ الإرسال…" data-required-message="هذا الحقل مطلوب" data-invalid-email-message="أدخل بريدًا إلكترونيًا صحيحًا" data-success-message="شكرًا لك — تم إرسال رسالتك. سأرد على البريد الإلكتروني الذي أدخلته." data-error-message="تعذّر إرسال الرسالة. حاول مرة أخرى، أو استخدم روابط البريد الإلكتروني / واتساب في الأعلى." data-unavailable-message="النموذج غير متاح حاليًا. يُرجى استخدام روابط البريد الإلكتروني أو واتساب في الأعلى.">
+
+  <h2 class="contact-form-heading">أرسل رسالة</h2>
+
+  <div class="contact-form-row">
+
+    <div class="contact-form-field">
+      <label for="contact-name">الاسم</label>
+      <input id="contact-name" name="name" type="text" autocomplete="name" maxlength="80" required="" aria-describedby="contact-name-error" />
+      <span class="contact-form-field-error" id="contact-name-error" aria-live="polite"></span>
+    </div>
+
+    <div class="contact-form-field">
+      <label for="contact-email">البريد الإلكتروني</label>
+      <input id="contact-email" name="email" type="email" autocomplete="email" maxlength="160" required="" aria-describedby="contact-email-error" />
+      <span class="contact-form-field-error" id="contact-email-error" aria-live="polite"></span>
+    </div>
+
+  </div>
+
+  <div class="contact-form-field">
+    <label for="contact-message">الرسالة</label>
+    <textarea id="contact-message" name="message" rows="6" maxlength="2000" required="" aria-describedby="contact-message-error"></textarea>
+    <span class="contact-form-field-error" id="contact-message-error" aria-live="polite"></span>
+  </div><div class="contact-form-honeypot" aria-hidden="true">
+    <label for="contact-company">Company</label>
+    <input id="contact-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <p class="contact-form-actions">
+    <button type="submit" class="contact-form-submit">إرسال الرسالة</button>
+  </p>
+
+  <p class="contact-form-status" role="status" aria-live="polite"></p>
+
+  <noscript>
+    <p class="contact-form-noscript">النموذج غير متاح حاليًا. يُرجى استخدام روابط البريد الإلكتروني أو واتساب في الأعلى.</p>
+  </noscript>
+
+</form>
+
+<script src="/assets/js/firebase-config.js" defer=""></script>
+
+<script src="/assets/js/contact-form.js" defer=""></script>
+
 <h2 id="البريد-الإلكتروني">البريد الإلكتروني</h2>
 
 <p><a href="mailto:abid@nasim.us">abid@nasim.us</a></p>
