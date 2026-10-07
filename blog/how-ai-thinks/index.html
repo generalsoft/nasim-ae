@@ -118,49 +118,56 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     aria-haspopup="true"
     aria-expanded="false"
     aria-controls="reader-tools-panel"
-    aria-label="Reading tools"
-    title="Reading tools">
+    aria-label="أدوات القراءة"
+    title="أدوات القراءة">
     Aa
   </button>
 
   <div id="reader-tools-panel" class="reader-tools-panel" hidden>
 
     <div class="reader-tools-row">
-      <span class="reader-tools-label">Text size <span id="reader-font-value" class="reader-tools-value">100%</span></span>
+      <span class="reader-tools-label">حجم النص <span id="reader-font-value" class="reader-tools-value">100%</span></span>
       <div class="reader-tools-buttons">
-        <button type="button" id="reader-font-decrease" aria-label="Decrease text size">A−</button>
-        <button type="button" id="reader-font-reset" aria-label="Reset text size">Reset</button>
-        <button type="button" id="reader-font-increase" aria-label="Increase text size">A+</button>
+        <button type="button" id="reader-font-decrease" aria-label="تصغير النص">A−</button>
+        <button type="button" id="reader-font-reset" aria-label="إعادة ضبط">إعادة ضبط</button>
+        <button type="button" id="reader-font-increase" aria-label="تكبير النص">A+</button>
       </div>
     </div><div class="reader-tools-row">
-      <label class="reader-tools-label" for="reader-font-select">Font</label>
+      <label class="reader-tools-label" for="reader-font-select">الخط</label>
       <select id="reader-font-select" class="reader-font-select"><option value="'Cairo', 'Noto Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif">Cairo (default)</option><option value="'Noto Naskh Arabic', serif">Noto Naskh Arabic</option><option value="'Amiri', 'Noto Naskh Arabic', serif">Amiri</option><option value="'Noto Kufi Arabic', 'Noto Sans Arabic', sans-serif">Noto Kufi Arabic</option></select>
     </div><div class="reader-tools-row">
-      <span class="reader-tools-label">Width</span>
-      <div class="reader-tools-buttons" role="group" aria-label="Reading width">
-        <button type="button" id="reader-width-normal" aria-pressed="true">Normal</button>
-        <button type="button" id="reader-width-wide" aria-pressed="false">Wide</button>
+      <span class="reader-tools-label">العرض</span>
+      <div class="reader-tools-buttons" role="group" aria-label="العرض">
+        <button type="button" id="reader-width-normal" aria-pressed="true">عادي</button>
+        <button type="button" id="reader-width-wide" aria-pressed="false">واسع</button>
       </div>
     </div>
 
     <div class="reader-tools-row">
       <label class="reader-tools-toggle-row" for="reader-relaxed-spacing">
         <input type="checkbox" id="reader-relaxed-spacing">
-        Relaxed line spacing
+        تباعد أسطر مريح
       </label>
     </div>
 
     <div class="reader-tools-row">
       <label class="reader-tools-toggle-row" for="reader-underline-links">
         <input type="checkbox" id="reader-underline-links">
-        Underline links
+        تسطير الروابط
       </label>
     </div>
 
     <div class="reader-tools-row">
       <label class="reader-tools-toggle-row" for="reader-focus-mode">
         <input type="checkbox" id="reader-focus-mode">
-        Focus mode (hide distractions)
+        وضع التركيز (إخفاء المشتّتات)
+      </label>
+    </div>
+
+    <div class="reader-tools-row">
+      <label class="reader-tools-toggle-row" for="reader-hide-cover">
+        <input type="checkbox" id="reader-hide-cover">
+        إخفاء صورة الغلاف
       </label>
     </div>
 
@@ -189,6 +196,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   var relaxedCheckbox = document.getElementById("reader-relaxed-spacing");
   var underlineCheckbox = document.getElementById("reader-underline-links");
   var focusCheckbox = document.getElementById("reader-focus-mode");
+  var hideCoverCheckbox = document.getElementById("reader-hide-cover");
 
   function readStoredIndex() {
     var raw = localStorage.getItem("readerFontStepIndex");
@@ -248,6 +256,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
   }
 
+  function applyHideCover(enabled) {
+    root.classList.toggle("reading-hide-cover", enabled);
+    localStorage.setItem("readerHideCover", enabled ? "1" : "0");
+    hideCoverCheckbox.checked = enabled;
+  }
+
   function updateProgress() {
     // The progress line is rendered after this script in the document
     // (see _includes/header.html), so it is resolved on demand rather than at
@@ -289,6 +303,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   applyRelaxedSpacing(localStorage.getItem("readerRelaxedSpacing") === "1");
   applyUnderlineLinks(localStorage.getItem("readerUnderlineLinks") === "1");
   applyFocus(localStorage.getItem("readerFocus") === "1");
+  applyHideCover(localStorage.getItem("readerHideCover") === "1");
 
   toggle.addEventListener("click", function () {
     var isOpen = !panel.hidden;
@@ -338,6 +353,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     applyFocus(focusCheckbox.checked);
   });
 
+  hideCoverCheckbox.addEventListener("change", function () {
+    applyHideCover(hideCoverCheckbox.checked);
+  });
+
   // Focus mode: the floating button and the Esc key both leave it; a thin
   // progress line (shown only in focus mode) tracks how far the reader has got.
   // The exit button is rendered after this script (see _includes/header.html),
@@ -374,9 +393,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     id="focus-exit"
     class="focus-exit"
     type="button"
-    aria-label="Exit focus mode"
-    title="Exit focus mode (Esc)">
-    ✕ Exit focus
+    aria-label="إنهاء وضع التركيز"
+    title="إنهاء وضع التركيز (Esc)">
+    ✕ إنهاء التركيز
   </button>
 
 </header>
